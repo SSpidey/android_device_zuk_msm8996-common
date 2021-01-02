@@ -26,10 +26,12 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/product_launched_with_m.mk)
 # Get non-open-source specific aspects
 $(call inherit-product, vendor/zuk/msm8996-common/msm8996-common-vendor.mk)
 
+# Setup dalvik vm configs
+$(call inherit-product, frameworks/native/build/phone-xhdpi-4096-dalvik-heap.mk)
+
 # Overlays
 DEVICE_PACKAGE_OVERLAYS += \
-    $(LOCAL_PATH)/overlay \
-    $(LOCAL_PATH)/overlay-lineage
+    $(LOCAL_PATH)/overlay
 
 PRODUCT_ENFORCE_RRO_TARGETS := \
     framework-res
@@ -89,15 +91,14 @@ PRODUCT_CHARACTERISTICS := nosdcard
 # Vendor properties
 -include $(LOCAL_PATH)/vendor_prop.mk
 
-# Additional native libraries
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/public.libraries.txt:$(TARGET_COPY_OUT_VENDOR)/etc/public.libraries.txt
 
 # Audio
 PRODUCT_PACKAGES += \
-    android.hardware.audio@5.0-impl \
+    android.hardware.audio@6.0-impl \
     android.hardware.audio@2.0-service \
-    android.hardware.audio.effect@5.0-impl \
+    android.hardware.audio.effect@6.0-impl \
     audio.a2dp.default \
     audio.primary.msm8996 \
     audio.r_submix.default \
@@ -130,7 +131,7 @@ PRODUCT_PACKAGES += \
     android.hardware.camera.provider@2.4-service \
     camera.msm8996 \
     mm-qcamera-app \
-    Snap \
+    Camera2 \
     libmm-qcamera \
     libfui
 
@@ -151,6 +152,7 @@ PRODUCT_PACKAGES += \
     init.qcom.usb.rc \
     init.recovery.qcom.rc \
     init.wlan.sh \
+    init.safailnet.rc \
     ueventd.qcom.rc
 
 # ConfigPanel
@@ -186,14 +188,14 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/calib.cfg:$(TARGET_COPY_OUT_VENDOR)/etc/calib.cfg
 
 # Doze mode
-#PRODUCT_PACKAGES += \
-#    ZukDoze
+PRODUCT_PACKAGES += \
+    ZukDoze
 
 # DRM
 PRODUCT_PACKAGES += \
     android.hardware.drm@1.0-impl \
     android.hardware.drm@1.0-service \
-    android.hardware.drm@1.2-service.clearkey
+    android.hardware.drm@1.3-service.clearkey
 
 # For config.fs
 PRODUCT_PACKAGES += \
@@ -231,8 +233,8 @@ PRODUCT_PACKAGES += \
     android.hardware.health@2.0-service
 
 # HW crypto
-#PRODUCT_PACKAGES += \
-#    vendor.qti.hardware.cryptfshw@1.0-service-qti.qsee
+PRODUCT_PACKAGES += \
+    vendor.qti.hardware.cryptfshw@1.0-service-qti.qsee
 
 # HIDL
 PRODUCT_PACKAGES += \
@@ -240,11 +242,11 @@ PRODUCT_PACKAGES += \
     android.hidl.base@1.0_system \
     android.hidl.manager@1.0-java \
     android.hidl.manager@1.0 \
-    android.hidl.manager@1.0_system
-
-# IMS
-PRODUCT_PACKAGES += \
-    ims-ext-common
+    android.hidl.manager@1.0_system \
+    libhidltransport \
+    libhwbinder \
+    libhidltransport.vendor \
+    libhwbinder.vendor
 
 # Input
 PRODUCT_COPY_FILES += \
@@ -264,12 +266,6 @@ PRODUCT_PACKAGES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/sec_config:$(TARGET_COPY_OUT_VENDOR)/etc/sec_config
 
-# IPv6
-PRODUCT_PACKAGES += \
-    ebtables \
-    ethertypes \
-    libebtc
-
 # Keymaster
 PRODUCT_PACKAGES += \
     android.hardware.keymaster@3.0-impl \
@@ -278,10 +274,6 @@ PRODUCT_PACKAGES += \
 # Lights
 PRODUCT_PACKAGES += \
     android.hardware.light@2.0-service.zuk_8996
-
-# LiveDisplay
-#PRODUCT_PACKAGES += \
-#    vendor.lineage.livedisplay@2.0-service-sdm
 
 # Media
 PRODUCT_COPY_FILES += \
@@ -317,7 +309,7 @@ PRODUCT_PACKAGES += \
 
 # Power
 PRODUCT_PACKAGES += \
-    android.hardware.power@1.2-service-qti
+    android.hardware.power-service-qti
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/powerhint.xml:$(TARGET_COPY_OUT_VENDOR)/etc/powerhint.xml
@@ -331,16 +323,15 @@ PRODUCT_COPY_FILES += \
 PRODUCT_PACKAGES += \
     libjson
 
-# RCS
-PRODUCT_PACKAGES += \
-    rcs_service_aidl \
-    rcs_service_aidl.xml \
-    rcs_service_api \
-    rcs_service_api.xml
-
 # RenderScript
 PRODUCT_PACKAGES += \
     android.hardware.renderscript@1.0-impl
+
+# RCS
+PRODUCT_PACKAGES += \
+    com.android.ims.rcsmanager \
+    PresencePolling \
+    RcsService
 
 # RIL
 PRODUCT_PACKAGES += \
@@ -349,6 +340,10 @@ PRODUCT_PACKAGES += \
     android.hardware.radio.config@1.0 \
     librmnetctl \
     libxml2
+
+PRODUCT_PACKAGES += \
+    libprotobuf-cpp-lite-vendorcompat \
+    libprotobuf-cpp-full-vendorcompat \
 
 # Seccomp policy
 PRODUCT_COPY_FILES += \
@@ -363,6 +358,12 @@ PRODUCT_PACKAGES += \
 # Telephony
 PRODUCT_PACKAGES += \
     ims-ext-common_system \
+    ims-ext-common \
+    ims_ext_common.xml \
+    qti-telephony-hidl-wrapper \
+    qti_telephony_hidl_wrapper.xml \
+    qti-telephony-utils \
+    qti_telephony_utils.xml \
     telephony-ext
 
 PRODUCT_BOOT_JARS += \
@@ -372,14 +373,6 @@ PRODUCT_BOOT_JARS += \
 # TextClassifier
 PRODUCT_PACKAGES += \
     textclassifier.bundle1
-
-# Touch HAL
-#PRODUCT_PACKAGES += \
-#    vendor.lineage.touch@1.0-service.zuk_8996
-
-# Trust HAL
-#PRODUCT_PACKAGES += \
-#    vendor.lineage.trust@1.0-service
 
 # USB
 PRODUCT_PACKAGES += \
@@ -394,6 +387,13 @@ $(call inherit-product, build/target/product/verity.mk)
 PRODUCT_PACKAGES += \
     vndk_package
 
+# VNDK
+PRODUCT_COPY_FILES += \
+    prebuilts/vndk/v29/arm64/arch-arm-armv8-a/shared/vndk-core/libprotobuf-cpp-full.so:$(TARGET_COPY_OUT_VENDOR)/lib/libprotobuf-cpp-full.so \
+    prebuilts/vndk/v29/arm64/arch-arm-armv8-a/shared/vndk-core/libprotobuf-cpp-lite.so:$(TARGET_COPY_OUT_VENDOR)/lib/libprotobuf-cpp-lite.so \
+    prebuilts/vndk/v29/arm64/arch-arm64-armv8-a/shared/vndk-core/libprotobuf-cpp-full.so:$(TARGET_COPY_OUT_VENDOR)/lib64/libprotobuf-cpp-full.so \
+    prebuilts/vndk/v29/arm64/arch-arm64-armv8-a/shared/vndk-core/libprotobuf-cpp-lite.so:$(TARGET_COPY_OUT_VENDOR)/lib64/libprotobuf-cpp-lite.so
+
 # Vibrator
 PRODUCT_PACKAGES += \
     android.hardware.vibrator@1.0-impl \
@@ -402,12 +402,12 @@ PRODUCT_PACKAGES += \
 # WiFi
 PRODUCT_PACKAGES += \
     android.hardware.wifi@1.0-service \
-    libqsap_sdk \
-    libQWiFiSoftApCfg \
     libwpa_client \
     hostapd \
     wpa_supplicant \
-    wpa_supplicant.conf
+    wpa_supplicant.conf \
+    WifiOverlay \
+    TetheringOverlay
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/wifi/p2p_supplicant_overlay.conf:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/p2p_supplicant_overlay.conf \
@@ -427,7 +427,7 @@ PRODUCT_BOOT_JARS += \
 
 # Fingerprint
 PRODUCT_PACKAGES += \
-    android.hardware.biometrics.fingerprint@2.1-service \
+    android.hardware.biometrics.fingerprint@2.1-service.zuk_msm8996 \
     ZukPocketMode
 
 # Thermal
