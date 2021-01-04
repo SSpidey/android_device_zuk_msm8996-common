@@ -29,7 +29,6 @@ import /vendor/etc/init/hw/init.msm.usb.configfs.rc
 import /vendor/etc/init/hw/init.qcom.power.rc
 import /vendor/etc/init/hw/init.qcom.usb.rc
 import /vendor/etc/init/init.zuk.rc
-import /vendor/etc/init/hw/init.safailnet.rc
 
 on early-init
     mount debugfs debugfs /sys/kernel/debug
@@ -195,7 +194,7 @@ on early-boot
     # Set RLIMIT_MEMLOCK to 64MB
     setrlimit 8 67108864 67108864
     start vendor.qseecomd
-    wait_for_prop vendor.sys.listeners.registered true
+    wait_for_prop sys.listeners.registered true
     write /dev/ipa 1
 
     # Allow subsystem (modem etc) debugging
@@ -249,8 +248,6 @@ on boot
     chmod 0660 /sys/devices/soc/soc:fpc1020/screen
     chmod 0660 /sys/devices/soc/soc:fpc1020/proximity_state
     chown system system /sys/devices/soc/soc:fpc1020/proximity_state
-    chmod 0660 /sys/devices/soc/soc:fpc1020/enable_wakeup
-    chown system system /sys/devices/soc/soc:fpc1020/enable_wakeup
 
     # Access permission for secure touch
     chmod 0660 /sys/devices/soc/75ba000.i2c/i2c-12/12-0020/secure_touch_enable
@@ -457,9 +454,9 @@ service vendor.qseecomd /vendor/bin/qseecomd
     group root
     writepid /dev/cpuset/system-background/tasks
 
-on property:vendor.sys.listeners.registered=*
-    setprop sys.keymaster.loaded ${vendor.sys.listeners.registered}
-    setprop vendor.sys.keymaster.loaded ${vendor.sys.listeners.registered}
+on property:sys.listeners.registered=*
+    setprop sys.keymaster.loaded ${sys.listeners.registered}
+    setprop vendor.sys.keymaster.loaded ${sys.listeners.registered}
 
 service time_daemon /vendor/bin/time_daemon
     class main
@@ -574,6 +571,17 @@ service bt-sh /vendor/bin/init.bt.sh
 on property:sys.boot_completed=1
     start wlan-sh
     start bt-sh
+
+service vendor.audio-hal /vendor/bin/hw/android.hardware.audio.service
+    override
+    class hal
+    user audioserver
+    # media gid needed for /dev/fm (radio) and for /data/misc/media (tee)
+    group audio camera drmrpc inet media mediadrm net_bt net_bt_admin net_bw_acct oem_2901 wakelock
+    capabilities BLOCK_SUSPEND
+    ioprio rt 4
+    writepid /dev/cpuset/foreground/tasks /dev/stune/foreground/tasks
+    onrestart restart audioserver
 
 on property:ro.vendor.bt.bdaddr_path=/data/vendor/bluetooth/bdaddr
     # Correct perms for bdaddr
