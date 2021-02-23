@@ -58,16 +58,11 @@ void check_device()
 	}
 }
 
-void vendor_load_properties() 
+void vendor_load_properties()
 {
 	check_device();
 
-	SetProperty("dalvik.vm.heapstartsize", "8m");
-	SetProperty("dalvik.vm.heapgrowthlimit", "256m");
-	SetProperty("dalvik.vm.heapsize", "512m");
-	SetProperty("dalvik.vm.heaptargetutilization", "1");
-	SetProperty("dalvik.vm.heapminfree", heapminfree);
-	SetProperty("dalvik.vm.heapmaxfree", heapmaxfree);
-
+    SetProperty("dalvik.vm.heapminfree", heapminfree);
+    SetProperty("dalvik.vm.heapmaxfree", heapmaxfree);
 }
 
