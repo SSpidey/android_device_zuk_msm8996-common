@@ -85,6 +85,9 @@ on late-fs
 on post-fs
     start vendor.qseecomd
 
+    # limit discard size to 128MB in order to avoid long IO latency
+    write /sys/block/sda/queue/discard_max_bytes 134217728
+
 # msm specific files that need to be created on /data
 on post-fs-data
     mkdir /data/vendor/misc 01771 system system
@@ -355,6 +358,8 @@ on property:sys.boot_completed=1
 
     # CPE fw_name used by sound trigger HAL
     chown media audio /sys/kernel/wcd_cpe0/fw_name
+    #Reinit lmkd to reconfigure lmkd properties
+    setprop lmkd.reinit 1
 
 on property:persist.env.fastdorm.enabled=true
     setprop persist.radio.data_no_toggle 1
@@ -363,19 +368,6 @@ service irsc_util /vendor/bin/irsc_util "/vendor/etc/sec_config"
     class core
     user root
     oneshot
-
-service vendor.rmt_storage /vendor/bin/rmt_storage
-    class core
-    user root
-    group system wakelock
-    shutdown critical
-    ioprio rt 0
-    writepid /dev/cpuset/background/tasks
-
-service vendor.tftp_server /vendor/bin/tftp_server
-    class core
-    user root
-    writepid /dev/cpuset/system-background/tasks
 
 service vendor.atfwd /vendor/bin/ATFWD-daemon
     class late_start
@@ -414,14 +406,6 @@ on property:ro.vendor.use_data_netmgrd=false
     # netmgr not supported on specific target
     stop vendor.netmgrd
 
-# Adjust socket buffer to enlarge TCP receive window for high bandwidth
-# but only if ro.data.large_tcp_window_size property is set.
-on property:ro.data.large_tcp_window_size=true
-    write /proc/sys/net/ipv4/tcp_adv_win_scale  2
-
-on property:sys.sysctl.tcp_adv_win_scale=*
-    write /proc/sys/net/ipv4/tcp_adv_win_scale ${sys.sysctl.tcp_adv_win_scale}
-
 service loc_launcher /vendor/bin/loc_launcher
     class late_start
     user gps
@@ -436,10 +420,6 @@ service qcom-sh /vendor/bin/init.qcom.sh
 
 on property:ro.vendor.ril.mbn_copy_completed=1
     write /data/vendor/radio/copy_complete 1
-
-on property:ro.data.large_tcp_window_size=true
-    # Adjust socket buffer to enlarge TCP receive window for high bandwidth (e.g. DO-RevB)
-    write /proc/sys/net/ipv4/tcp_adv_win_scale  2
 
 service ril-daemon2 /vendor/bin/hw/rild -c 2
     class main
@@ -457,13 +437,6 @@ service vendor.qseecomd /vendor/bin/qseecomd
 on property:sys.listeners.registered=*
     setprop sys.keymaster.loaded ${sys.listeners.registered}
     setprop vendor.sys.keymaster.loaded ${sys.listeners.registered}
-
-service time_daemon /vendor/bin/time_daemon
-    class main
-    user system
-    group system
-    capabilities SYS_TIME
-    writepid /dev/cpuset/system-background/tasks
 
 # Start camera server as daemon
 service qcamerasvr /vendor/bin/mm-qcamera-daemon
@@ -603,6 +576,9 @@ on property:init.svc.surfaceflinger=restarting
 on property:slpi.restart=1
     write /sys/kernel/debug/msm_subsys/slpi restart
 
+on property:vendor.media.target.version=*
+    setprop vendor.sys.media.target.version ${vendor.media.target.version}
+
 on property:vold.decrypt=trigger_reset_main
     stop audio-hal-2-0
 
@@ -616,3 +592,6 @@ on property:vold.decrypt=trigger_restart_min_framework
 on property:vold.decrypt=trigger_restart_framework
     start audio-hal-2-0
     restart vendor.camera-provider-2-4
+
+on property:dev.bootcomplete=1
+    restart ril-daemon
